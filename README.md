@@ -1,6 +1,6 @@
-# Sistema de Gestão de Contratos e Relatórios
+# Sistema de Gestão de Contratos e Relatórios Criado Com Claude
 
-Aplicação web para gerenciamento de contratos, geração de relatórios e rastreamento de auditoria, construída com Laravel 13 e React 19.
+Aplicação web para gerenciamento de contratos, geração de relatórios e rastreamento de auditoria, construída com Laravel 13 e React 19. - OBJETO DE ESTUDO EM CLAUDE IA
 
 ## Funcionalidades
 
