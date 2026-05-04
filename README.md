@@ -1,4 +1,4 @@
-# Projeto Web — Sistema de Gestão de Contratos
+# Estudo Claude — Sistema de Gestão de Contratos 
 
 Sistema interno para gestão de contratos, relatórios e auditoria, desenvolvido com Laravel 13 + Inertia.js v3 + React 19.
 
