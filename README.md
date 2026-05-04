@@ -1,114 +1,94 @@
-# Sistema de Gestão de Contratos e Relatórios Criado Com Claude
+# Projeto Web — Sistema de Gestão de Contratos
 
-Aplicação web para gerenciamento de contratos, geração de relatórios e rastreamento de auditoria, construída com Laravel 13 e React 19. - OBJETO DE ESTUDO EM CLAUDE IA
-
-## Funcionalidades
-
-- **Contratos**: CRUD completo com rastreamento de status, geração de PDFs com QR Code e endpoint público de validação
-- **Relatórios**: Geração assíncrona (via filas) nos formatos Excel, CSV e PDF, com envio para o Telegram
-- **Auditoria**: Trilha completa de alterações com rastreamento por IP, usuário e tipo de evento
-- **Painel Admin**: Gerenciamento de usuários com controle de papéis (Admin/Usuário)
-- **Dashboard**: Estatísticas de contratos, tendências mensais e lista de contratos recentes
-- **Autenticação**: Login, registro, 2FA (TOTP), verificação de e-mail e redefinição de senha via Laravel Fortify
+Sistema interno para gestão de contratos, relatórios e auditoria, desenvolvido com Laravel 13 + Inertia.js v3 + React 19.
 
 ## Stack
 
-**Backend:** PHP 8.3, Laravel 13, Inertia.js v3 (Laravel), Laravel Fortify, Laravel Wayfinder
+| Camada | Tecnologia |
+|---|---|
+| Backend | PHP 8.5 / Laravel 13 |
+| Frontend | React 19 / Inertia.js v3 |
+| Estilização | Tailwind CSS v4 |
+| Autenticação | Laravel Fortify |
+| Rotas tipadas | Laravel Wayfinder |
+| Testes | PHPUnit 12 |
+| IA | Google Gemini API |
 
-**Frontend:** React 19, TypeScript 5.7, Tailwind CSS v4, Radix UI, Inertia.js v3 (React), Vite
+## Funcionalidades
 
-**Banco de Dados:** SQLite (padrão), compatível com MySQL/PostgreSQL
+### Contratos
+- CRUD completo com status (Pendente, Ativo, Concluído, Cancelado)
+- Geração de PDFs com QR code de validação
+- Upload de arquivos anexados (PDF, DOC, XLS, imagens — máx. 20MB)
+- Análise com IA: resumo executivo via Google Gemini
 
-**Serviços:** DomPDF, BaconQrCode, PhpSpreadsheet, Telegram Bot API, owen-it/laravel-auditing
+### Relatórios
+- Geração assíncrona (via Jobs) em Excel, PDF e CSV
+- Filtros por período, usuário, status
+- Envio via Telegram
+- Análise com IA para relatórios em PDF
+
+### Log de Auditoria
+- Registro de todas as ações (criação, edição, exclusão)
+- Visualização com diff inline de valores alterados
+- Filtros por evento, módulo, usuário, IP e data
+
+### Administração
+- Gestão de usuários com roles (admin / usuário)
+- Autenticação com 2FA (TOTP + QR code + recovery codes)
 
 ## Requisitos
 
-- PHP >= 8.3
+- PHP 8.5+
+- Node.js 20+
 - Composer
-- Node.js >= 20
-- SQLite (ou MySQL/PostgreSQL)
 
 ## Instalação
 
 ```bash
-# 1. Clone o repositório
-git clone <url-do-repositorio>
-cd projeto-web
+# Dependências
+composer install
+npm install
 
-# 2. Configure o ambiente
+# Ambiente
 cp .env.example .env
+php artisan key:generate
 
-# 3. Execute o setup completo (instala dependências, gera chave, executa migrations, compila assets)
-composer run setup
+# Banco de dados
+php artisan migrate --seed
+
+# Build frontend
+npm run build
 ```
 
-O comando `setup` executa automaticamente:
-- `composer install`
-- Geração da chave da aplicação
-- Migrations do banco de dados
-- `npm install && npm run build`
+## Variáveis de ambiente obrigatórias
+
+```env
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=sqlite          # ou mysql/pgsql
+
+GEMINI_API_KEY=               # Google AI Studio — aistudio.google.com/apikey
+TELEGRAM_BOT_TOKEN=           # opcional — envio de relatórios via Telegram
+TELEGRAM_CHAT_ID=             # opcional
+```
 
 ## Desenvolvimento
 
 ```bash
-# Inicia os servidores em paralelo: Laravel, fila de jobs e Vite HMR
-composer run dev
-```
-
-A aplicação estará disponível em `http://localhost:8000`.
-
-## Configurações de Ambiente
-
-Variáveis relevantes no `.env`:
-
-```env
-# Banco de dados (padrão: SQLite)
-DB_CONNECTION=sqlite
-
-# Filas (necessário para geração de relatórios)
-QUEUE_CONNECTION=database
-
-# Telegram (opcional, para envio de relatórios)
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
+composer run dev   # inicia Laravel + Vite juntos
 ```
 
 ## Testes
 
 ```bash
-# Rodar todos os testes
-php artisan test --compact
-
-# Rodar um arquivo específico
-php artisan test --compact tests/Feature/ExampleTest.php
-
-# Filtrar por nome
-php artisan test --compact --filter=nomeDoTeste
+php artisan test
 ```
 
-## Build de Produção
+## Segurança
 
-```bash
-npm run build
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
-Para deploy em produção, recomendamos o [Laravel Cloud](https://cloud.laravel.com/).
-
-## Estrutura Principal
-
-```
-app/
-├── Http/Controllers/   # Controladores (+ Admin/)
-├── Models/             # User, Contract, ContractPdf, GeneratedReport
-├── Services/           # ReportExportService, ContractPdfService, TelegramService
-├── Jobs/               # GenerateReportJob (assíncrono)
-├── Policies/           # Autorização por recurso
-└── Enums/              # ContractStatus, UserRole, ReportModule, ReportFormat
-
-resources/js/
-├── pages/              # Páginas React por módulo (contracts/, reports/, admin/, audits/, auth/)
-└── components/         # Componentes reutilizáveis
-```
+- CSRF em todas as rotas web
+- Autorização via Policies em todos os recursos
+- Rate limiting nas rotas de análise IA (20 req/hora por usuário)
+- Arquivos armazenados no disco local (fora do public)
+- API key nunca exposta ao cliente
