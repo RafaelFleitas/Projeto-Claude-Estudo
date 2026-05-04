@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useRef } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,136 @@ function simplifyAuditableType(auditableType: string): string {
     return auditableType.replace(/^App\\Models\\/, '');
 }
 
+const fieldLabels: Record<string, string> = {
+    contrato: 'Contrato',
+    numero_relatorio: 'Número Relatório',
+    projeto: 'Projeto',
+    task_azure: 'Task Azure',
+    nota_fiscal: 'Nota Fiscal',
+    valor_total: 'Valor Total',
+    status: 'Status',
+    name: 'Nome',
+    email: 'E-mail',
+    password: 'Senha',
+    created_at: 'Criado em',
+    updated_at: 'Atualizado em',
+    deleted_at: 'Excluído em',
+    user_id: 'Usuário',
+    description: 'Descrição',
+    start_date: 'Data Início',
+    end_date: 'Data Fim',
+    due_date: 'Data Vencimento',
+};
+
+function formatFieldLabel(key: string): string {
+    if (fieldLabels[key]) {
+        return fieldLabels[key];
+    }
+    return key
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+function AuditDetails({ audit }: { audit: AuditEntry }) {
+    const { event, old_values, new_values } = audit;
+
+    if (event === 'created') {
+        return (
+            <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Valores criados</p>
+                {new_values && Object.keys(new_values).length > 0 ? (
+                    <table className="w-full text-xs">
+                        <thead>
+                            <tr className="text-muted-foreground">
+                                <th className="text-left pr-4 py-1 font-medium w-1/4">Campo</th>
+                                <th className="text-left py-1 font-medium">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Object.entries(new_values).map(([key, val]) => (
+                                <tr key={key} className="border-t border-border/40">
+                                    <td className="pr-4 py-1 text-muted-foreground">{formatFieldLabel(key)}</td>
+                                    <td className="py-1 text-green-700 dark:text-green-400 font-mono break-all">{String(val ?? '—')}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <p className="text-xs text-muted-foreground">Sem dados disponíveis.</p>
+                )}
+            </div>
+        );
+    }
+
+    if (event === 'deleted') {
+        return (
+            <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Valores excluídos</p>
+                {old_values && Object.keys(old_values).length > 0 ? (
+                    <table className="w-full text-xs">
+                        <thead>
+                            <tr className="text-muted-foreground">
+                                <th className="text-left pr-4 py-1 font-medium w-1/4">Campo</th>
+                                <th className="text-left py-1 font-medium">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Object.entries(old_values).map(([key, val]) => (
+                                <tr key={key} className="border-t border-border/40">
+                                    <td className="pr-4 py-1 text-muted-foreground">{formatFieldLabel(key)}</td>
+                                    <td className="py-1 text-red-700 dark:text-red-400 font-mono break-all">{String(val ?? '—')}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <p className="text-xs text-muted-foreground">Sem dados disponíveis.</p>
+                )}
+            </div>
+        );
+    }
+
+    if (event === 'updated') {
+        const allKeys = Array.from(new Set([
+            ...Object.keys(old_values ?? {}),
+            ...Object.keys(new_values ?? {}),
+        ]));
+
+        return (
+            <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Alterações realizadas</p>
+                {allKeys.length > 0 ? (
+                    <table className="w-full text-xs">
+                        <thead>
+                            <tr className="text-muted-foreground">
+                                <th className="text-left pr-4 py-1 font-medium w-1/4">Campo</th>
+                                <th className="text-left pr-4 py-1 font-medium w-[37.5%]">Antes</th>
+                                <th className="text-left py-1 font-medium w-[37.5%]">Depois</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {allKeys.map((key) => (
+                                <tr key={key} className="border-t border-border/40">
+                                    <td className="pr-4 py-1 text-muted-foreground">{formatFieldLabel(key)}</td>
+                                    <td className="pr-4 py-1 text-red-700 dark:text-red-400 font-mono break-all">{String(old_values?.[key] ?? '—')}</td>
+                                    <td className="py-1 text-green-700 dark:text-green-400 font-mono break-all">{String(new_values?.[key] ?? '—')}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <p className="text-xs text-muted-foreground">Sem alterações registradas.</p>
+                )}
+            </div>
+        );
+    }
+
+    return <p className="text-xs text-muted-foreground">Sem detalhes disponíveis para este evento.</p>;
+}
+
 export default function AuditsIndex({ audits, filters, users }: Props) {
+    const [expandedId, setExpandedId] = useState<number | null>(null);
     const userIdRef = useRef<HTMLSelectElement>(null);
     const eventRef = useRef<HTMLSelectElement>(null);
     const moduleRef = useRef<HTMLSelectElement>(null);
@@ -156,29 +285,49 @@ export default function AuditsIndex({ audits, filters, users }: Props) {
                                     </td>
                                 </tr>
                             ) : (
-                                audits.data.map((audit) => (
-                                    <tr key={audit.id} className="border-b last:border-0 hover:bg-muted/30">
-                                        <td className="px-4 py-3">
-                                            <Badge variant={eventVariants[audit.event]}>
-                                                {eventLabels[audit.event]}
-                                            </Badge>
-                                        </td>
-                                        <td className="px-4 py-3 text-muted-foreground">
-                                            {simplifyAuditableType(audit.auditable_type)}
-                                        </td>
-                                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                                            #{audit.auditable_id}
-                                        </td>
-                                        <td className="px-4 py-3">{audit.user?.name ?? '—'}</td>
-                                        <td className="px-4 py-3 font-mono text-xs">{audit.ip_address ?? '—'}</td>
-                                        <td className="px-4 py-3 text-muted-foreground">
-                                            {new Date(audit.created_at).toLocaleDateString('pt-BR', {
-                                                day: '2-digit', month: '2-digit', year: 'numeric',
-                                                hour: '2-digit', minute: '2-digit',
-                                            })}
-                                        </td>
-                                    </tr>
-                                ))
+                                audits.data.map((audit) => {
+                                    const isExpanded = expandedId === audit.id;
+                                    return (
+                                        <Fragment key={audit.id}>
+                                            <tr
+                                                className="border-b hover:bg-muted/30 cursor-pointer select-none"
+                                                onClick={() => setExpandedId(isExpanded ? null : audit.id)}
+                                            >
+                                                <td className="px-4 py-3">
+                                                    <Badge variant={eventVariants[audit.event]}>
+                                                        {eventLabels[audit.event]}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-4 py-3 text-muted-foreground">
+                                                    {simplifyAuditableType(audit.auditable_type)}
+                                                </td>
+                                                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                                                    #{audit.auditable_id}
+                                                </td>
+                                                <td className="px-4 py-3">{audit.user?.name ?? '—'}</td>
+                                                <td className="px-4 py-3 font-mono text-xs">{audit.ip_address ?? '—'}</td>
+                                                <td className="px-4 py-3 text-muted-foreground">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span>
+                                                            {new Date(audit.created_at).toLocaleDateString('pt-BR', {
+                                                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                                                hour: '2-digit', minute: '2-digit',
+                                                            })}
+                                                        </span>
+                                                        <span className="text-muted-foreground/50 text-xs">{isExpanded ? '▲' : '▼'}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {isExpanded && (
+                                                <tr className="border-b bg-muted/20">
+                                                    <td colSpan={6} className="px-6 py-4">
+                                                        <AuditDetails audit={audit} />
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </Fragment>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

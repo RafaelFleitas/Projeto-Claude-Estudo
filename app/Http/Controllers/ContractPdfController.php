@@ -24,7 +24,9 @@ class ContractPdfController extends Controller
 
     public function download(ContractPdf $contractPdf): StreamedResponse
     {
-        abort_if(!Storage::exists($contractPdf->file_path), 404, 'Arquivo não encontrado.');
+        $this->authorize('view', $contractPdf->contract);
+
+        abort_if(! Storage::exists($contractPdf->file_path), 404, 'Arquivo não encontrado.');
 
         return Storage::download($contractPdf->file_path, $contractPdf->file_name);
     }

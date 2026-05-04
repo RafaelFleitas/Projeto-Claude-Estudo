@@ -37,7 +37,12 @@ return [
 
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
-        'chat_id'   => env('TELEGRAM_CHAT_ID'),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
+    ],
+
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => 'gemini-2.5-flash',
     ],
 
 ];

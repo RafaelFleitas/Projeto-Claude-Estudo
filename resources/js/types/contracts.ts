@@ -14,9 +14,23 @@ export type Contract = {
     user_id: number;
     user?: User;
     pdfs?: ContractPdf[];
+    attachments?: ContractAttachment[];
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
+};
+
+export type ContractAttachment = {
+    id: number;
+    contract_id: number;
+    uploaded_by: number;
+    file_path: string;
+    file_name: string;
+    original_name: string;
+    mime_type: string | null;
+    file_size_bytes: number | null;
+    created_at: string;
+    uploaded_by_user?: User;
 };
 
 export type ContractPdf = {

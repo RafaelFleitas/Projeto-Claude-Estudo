@@ -16,7 +16,7 @@ class ContractController extends Controller
     {
         $this->authorize('viewAny', Contract::class);
 
-        $filters   = $request->only(['search', 'status']);
+        $filters = $request->only(['search', 'status']);
         $contracts = Contract::with('user')
             ->when($filters['search'] ?? null, fn ($q, $s) => $q->where('contrato', 'like', "%{$s}%")
                 ->orWhere('projeto', 'like', "%{$s}%"))
@@ -27,7 +27,7 @@ class ContractController extends Controller
 
         return Inertia::render('contracts/index', [
             'contracts' => $contracts,
-            'filters'   => $filters,
+            'filters' => $filters,
         ]);
     }
 
@@ -50,7 +50,7 @@ class ContractController extends Controller
     {
         $this->authorize('view', $contract);
 
-        $contract->load(['user', 'pdfs.generatedBy']);
+        $contract->load(['user', 'pdfs.generatedBy', 'attachments.uploadedBy']);
 
         return Inertia::render('contracts/show', [
             'contract' => $contract,

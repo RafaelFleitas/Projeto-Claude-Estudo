@@ -46,4 +46,14 @@ class ContractPolicy
     {
         return true;
     }
+
+    public function uploadAttachment(User $user, Contract $contract): bool
+    {
+        return true;
+    }
+
+    public function deleteAttachment(User $user, Contract $contract): bool
+    {
+        return $user->isAdmin() || $contract->user_id === $user->id;
+    }
 }

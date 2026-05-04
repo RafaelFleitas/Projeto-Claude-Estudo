@@ -2,8 +2,10 @@ import { Head, Form, Link } from '@inertiajs/react';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import AiAnalysisPanel from '@/components/ai-analysis-panel';
 import ReportController from '@/actions/App/Http/Controllers/ReportController';
 import TelegramController from '@/actions/App/Http/Controllers/TelegramController';
+import AiAnalysisController from '@/actions/App/Http/Controllers/AiAnalysisController';
 import type { GeneratedReport } from '@/types';
 
 interface Props {
@@ -76,6 +78,12 @@ export default function ReportsShow({ report }: Props) {
                                 </Button>
                             )}
                         </Form>
+                    </div>
+                )}
+
+                {report.status === 'completed' && report.format === 'pdf' && (
+                    <div className="mt-4">
+                        <AiAnalysisPanel analyzeUrl={AiAnalysisController.analyzeReport.url(report)} />
                     </div>
                 )}
 

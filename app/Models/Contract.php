@@ -16,7 +16,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 class Contract extends Model implements Auditable
 {
     /** @use HasFactory<ContractFactory> */
-    use HasFactory, SoftDeletes, \OwenIt\Auditing\Auditable;
+    use HasFactory, \OwenIt\Auditing\Auditable, SoftDeletes;
 
     protected array $auditInclude = ['contrato', 'numero_relatorio', 'projeto', 'task_azure', 'nota_fiscal', 'valor_total', 'status'];
 
@@ -32,11 +32,16 @@ class Contract extends Model implements Auditable
         return $this->hasMany(ContractPdf::class);
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(ContractAttachment::class);
+    }
+
     protected function casts(): array
     {
         return [
             'valor_total' => 'decimal:2',
-            'status'      => ContractStatus::class,
+            'status' => ContractStatus::class,
         ];
     }
 }
